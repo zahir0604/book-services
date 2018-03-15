@@ -1,0 +1,28 @@
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+#*.jar
+*.war
+*.ear
+*.iml
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+build
+.gradle
+.idea
+.settings
+bin
+catalina.home_IS_UNDEFINED
+.classpath
+.project
+#test push 
+/WEB-INF/
+/src/main/resources/MediSpan.Documents.Monograph.css
+/src/main/resources/MediSpan.Documents.Monograph.xslt
+../.gradle
+out
