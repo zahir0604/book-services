@@ -10,13 +10,30 @@ import java.util.List;
 
 public class BooksDao {
 
-    public static List<Book> getBooks() {
+    public static List<Book> getBooksByUser(String user) {
 
-        String query = "select * from BOOK ORDER BY DATE_TIME DESC";
+        String query = "select * from BOOK B WHERE B.USER = ? ORDER BY DATE_TIME DESC";
 
         PreparedStatement preparedStatement = getPreparedStatement(query);
         ResultSet resultSet = null;
         try {
+            preparedStatement.setString(1,user);
+            resultSet = preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return getBooks(resultSet);
+    }
+
+    public static List<Book> getAllOtherBooks(String user) {
+
+        String query = "select * from BOOK B WHERE B.USER <> ? ORDER BY DATE_TIME DESC";
+
+        PreparedStatement preparedStatement = getPreparedStatement(query);
+        ResultSet resultSet = null;
+        try {
+            preparedStatement.setString(1,user);
             resultSet = preparedStatement.executeQuery();
         } catch (SQLException e) {
             throw new RuntimeException(e);
