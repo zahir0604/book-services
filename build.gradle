@@ -43,6 +43,8 @@ dependencies {
     testCompile group: 'org.springframework', name: 'spring-test', version: '4.1.6.RELEASE'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.1.0'
 
+    runtime group: 'org.hsqldb', name: 'hsqldb', version: '2.4.0'
+
 
 
 }

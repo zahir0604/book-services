@@ -4,16 +4,27 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Book {
 
-    public String isbnId;
+    private String isbnId;
 
-    public String title;
+    private String title;
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    private String user;
 
     public Book() {
     }
 
-    public Book(String isbnId, String title) {
+    public Book(String isbnId, String title, String user) {
         this.isbnId = isbnId;
         this.title = title;
+        this.user = user;
     }
 
     public String getTitle() {
