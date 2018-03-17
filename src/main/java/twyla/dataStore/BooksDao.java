@@ -1,48 +1,80 @@
 package twyla.dataStore;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
 import twyla.books.Book;
 import twyla.comments.Comment;
 import twyla.comments.CommentsByUser;
+import twyla.exceptions.BadRequestException;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+@Repository
 public class BooksDao {
 
-    public static List<Book> getBooksByUser(String user) {
+    @Autowired
+    private DataSource dataSource;
+
+    public List<Book> getBooksByUser(String user) {
 
         String query = "select * from BOOK B WHERE B.USER = ? ORDER BY DATE_TIME DESC";
-
-        PreparedStatement preparedStatement = getPreparedStatement(query);
-        ResultSet resultSet = null;
-        try {
-            preparedStatement.setString(1,user);
-            resultSet = preparedStatement.executeQuery();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return getBooks(resultSet);
+        List<String> params = Arrays.asList(user);
+        return getBooks(executeSelect(query, params));
     }
 
-    public static List<Book> getAllOtherBooks(String user) {
+    public List<Book> getAllOtherBooks(String user) {
 
         String query = "select * from BOOK B WHERE B.USER <> ? ORDER BY DATE_TIME DESC";
 
-        PreparedStatement preparedStatement = getPreparedStatement(query);
-        ResultSet resultSet = null;
-        try {
-            preparedStatement.setString(1,user);
-            resultSet = preparedStatement.executeQuery();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return getBooks(resultSet);
+        List<String> params = Arrays.asList(user);
+        return getBooks(executeSelect(query, params));
     }
 
-    private static List<Book> getBooks(ResultSet resultSet) {
+    public int addBooks(Book book) {
+
+        String query = "INSERT INTO BOOK"
+            + "(ISBN_ID, TITLE, USER, DATE_TIME) VALUES"
+            + "(?,?,?,?)";
+
+        List<String> params = Arrays.asList(book.getIsbnId(), book.getTitle(), book.getUser());
+        return executeInsert(query, params);
+
+    }
+
+    public int addComments(Comment comment) {
+
+        String query = "INSERT INTO COMMENTS"
+            + "(BOOK_ID, COMMENT, RATING,USER, DATE_TIME) VALUES"
+            + "(?,?,?,?,?)";
+
+        List<String> params = Arrays.asList(comment.getBookId(), comment.getComment(), comment.getRating(), comment.getUser());
+        return executeInsert(query, params);
+
+    }
+
+    public List<Comment> getComments(String bookId) {
+
+        String query = "select * from COMMENTS where BOOK_ID = ? ORDER BY DATE_TIME DESC";
+        List<String> params = Arrays.asList(bookId);
+        return getComments(executeSelect(query, params));
+    }
+
+    public List<CommentsByUser> getCommentsByUser(String user) {
+
+        String query = "select C.BOOK_ID, B.TITLE, C.COMMENT, C.RATING from COMMENTS C, BOOK B "
+            + "where C.BOOK_ID = B.ISBN_ID AND C.USER = ? ORDER BY DATE_TIME DESC";
+        List<String> params = Arrays.asList(user);
+
+        return getCommentsByUser(executeSelect(query, params));
+    }
+
+    private List<Book> getBooks(ResultSet resultSet) {
 
         List<Book> books = new ArrayList<>();
         Book book = null;
@@ -61,81 +93,7 @@ public class BooksDao {
         return books;
     }
 
-    public static void addBooks(Book book) {
-
-        String query = "INSERT INTO BOOK"
-            + "(ISBN_ID, TITLE, USER, DATE_TIME) VALUES"
-            + "(?,?,?,?)";
-
-        PreparedStatement preparedStatement = getPreparedStatement(query);
-        try {
-            preparedStatement.setString(1, book.getIsbnId());
-            preparedStatement.setString(2, book.getTitle());
-            preparedStatement.setString(3, book.getUser());
-            preparedStatement.setTimestamp(4,getCurrentTimeStamp());
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public static void addComments(Comment comment) {
-
-        String query = "INSERT INTO COMMENTS"
-            + "(BOOK_ID, COMMENT, RATING,USER, DATE_TIME) VALUES"
-            + "(?,?,?,?,?)";
-
-        PreparedStatement preparedStatement = getPreparedStatement(query);
-        ResultSet resultSet = null;
-        try {
-            preparedStatement.setString(1, comment.getBookId());
-            preparedStatement.setString(2, comment.getComment());
-            preparedStatement.setString(3, comment.getRating());
-            preparedStatement.setString(4, comment.getUser());
-            preparedStatement.setTimestamp(5,getCurrentTimeStamp());
-            preparedStatement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-
-    public static List<Comment> getComments(String bookId) {
-
-        String query = "select * from COMMENTS where BOOK_ID = ? ORDER BY DATE_TIME DESC";
-        PreparedStatement preparedStatement = null;
-        ResultSet resultSet = null;
-        try {
-            preparedStatement = getPreparedStatement(query);
-            preparedStatement.setString(1, bookId);
-            resultSet = preparedStatement.executeQuery();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return getComments(resultSet);
-    }
-
-    public static List<CommentsByUser> getCommentsByUser(String user) {
-
-        String query = "select C.BOOK_ID, B.TITLE, C.COMMENT, C.RATING from COMMENTS C, BOOK B "
-            + "where C.BOOK_ID = B.ISBN_ID AND C.USER = ? ORDER BY DATE_TIME DESC";
-        PreparedStatement preparedStatement = null;
-        ResultSet resultSet = null;
-        try {
-            preparedStatement = getPreparedStatement(query);
-            preparedStatement.setString(1, user);
-            resultSet = preparedStatement.executeQuery();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        return getCommentsByUser(resultSet);
-    }
-
-    private static List<Comment> getComments(ResultSet resultSet) {
+    private List<Comment> getComments(ResultSet resultSet) {
 
         List<Comment> comments = new ArrayList<>();
         Comment comment = null;
@@ -154,13 +112,14 @@ public class BooksDao {
 
         return comments;
     }
-    private static List<CommentsByUser> getCommentsByUser(ResultSet resultSet) {
+
+    private List<CommentsByUser> getCommentsByUser(ResultSet resultSet) {
 
         List<CommentsByUser> comments = new ArrayList<>();
         CommentsByUser commentsByUser = null;
         try {
             while (resultSet.next()) {
-                commentsByUser= new CommentsByUser();
+                commentsByUser = new CommentsByUser();
                 commentsByUser.setTitle(resultSet.getString("TITLE"));
                 commentsByUser.setBookId(resultSet.getString("BOOK_ID"));
                 commentsByUser.setComment(resultSet.getString("COMMENT"));
@@ -174,35 +133,65 @@ public class BooksDao {
         return comments;
     }
 
-    private static Connection connection;
+    private ResultSet executeSelect(String query, List<String> params) {
 
-    private static Connection getConnection() {
-
-        if (connection == null) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+        try {
+            preparedStatement = dataSource.getConnection().prepareStatement(query);
+            int position = 1;
+            for (String param : params) {
+                preparedStatement.setString(position, param);
+                position++;
+            }
+            resultSet = preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
             try {
-                Class.forName("org.hsqldb.jdbc.JDBCDriver");
-                //Creating the connection with HSQLDB
-                connection = DriverManager.getConnection("jdbc:hsqldb:file:C:/Workspace/Twyla/book-services/books", "sa", "");
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                preparedStatement.close();
+                dataSource.getConnection().close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
 
         }
-        return connection;
+
+        return resultSet;
     }
 
-    private static PreparedStatement preparedStatement;
+    private int executeInsert(String query, List<String> params) {
 
-    private static PreparedStatement getPreparedStatement(String query) {
+        PreparedStatement preparedStatement = null;
+        int result;
         try {
-            preparedStatement = getConnection().prepareStatement(query);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            preparedStatement = dataSource.getConnection().prepareStatement(query);
+
+            int position = 1;
+            for (String param : params) {
+                preparedStatement.setString(position, param);
+                position++;
+            }
+
+            preparedStatement.setTimestamp(position, getCurrentTimeStamp());
+            result = preparedStatement.executeUpdate();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            throw new BadRequestException("Book " + params.get(0) + " is already added");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                preparedStatement.close();
+                dataSource.getConnection().close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
         }
-        return preparedStatement;
+            return result;
     }
 
-    private static java.sql.Timestamp getCurrentTimeStamp() {
+    private java.sql.Timestamp getCurrentTimeStamp() {
 
         java.util.Date today = new java.util.Date();
         return new java.sql.Timestamp(today.getTime());

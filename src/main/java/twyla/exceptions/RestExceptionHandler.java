@@ -17,10 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @Autowired
-    HttpServletRequest hsr;
-
-    static final String ERROR = "error";
     private static org.slf4j.Logger Logger;
 
     public RestExceptionHandler() {
@@ -44,6 +40,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         ex.printStackTrace();
 
         return new ResponseEntity<>(ex.getMessage(), new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Object> handleRunTime(final RuntimeException ex) {
+
+        System.out.println("handleBadRequest");
+
+        ex.printStackTrace();
+
+        return new ResponseEntity<>(ex.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

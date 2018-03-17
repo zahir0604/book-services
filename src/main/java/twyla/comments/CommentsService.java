@@ -1,26 +1,29 @@
 package twyla.comments;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import twyla.dataStore.BooksDao;
 
 import java.util.List;
 
+@Service
 public class CommentsService {
 
+    @Autowired
+    private BooksDao booksDao;
 
-    public static List<Comment> getComments(String bookId) {
+    public List<Comment> getComments(String bookId) {
 
-        return BooksDao.getComments(bookId);
+        return booksDao.getComments(bookId);
     }
 
-    public static List<CommentsByUser> getCommentsByUser(String user) {
+    public List<CommentsByUser> getCommentsByUser(String user) {
 
-        return BooksDao.getCommentsByUser(user);
+        return booksDao.getCommentsByUser(user);
     }
 
-
-    public static List<Comment> addComment(Comment comment) {
-        BooksDao.addComments(comment);
-
-        return BooksDao.getComments(comment.getBookId());
+    public List<Comment> addComment(Comment comment) {
+        booksDao.addComments(comment);
+        return booksDao.getComments(comment.getBookId());
     }
 }

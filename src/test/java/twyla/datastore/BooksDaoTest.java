@@ -1,22 +1,111 @@
 package twyla.datastore;
 
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 import twyla.books.Book;
+import twyla.comments.Comment;
 import twyla.dataStore.BooksDao;
+import twyla.dataStore.DataSource;
 
+import java.sql.Connection;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
 public class BooksDaoTest {
 
-    @Test
-    public void testGetBooks() throws Exception {
+    @Mock
+    private Connection connection;
 
-        System.out.println(BooksDao.getBooksByUser().size());
+    private Book book;
+
+    @Mock
+    private DataSource dataSource;
+
+    @Mock
+    private BooksDao booksDao;
+
+    @Before
+    public void setUp() throws Exception {
+
+        book = new Book();
+        book.setUser("admin");
+        book.setTitle("Head First Java");
+        book.setIsbnId("001");
+
     }
 
     @Test
-    public void addBooks() throws Exception {
+    public void testMockDao() throws Exception {
 
-       BooksDao.addBooks(new Book("02", "Titile", "Admin"));
-
-        System.out.println( BooksDao.getBooksByUser().size());
+        Assert.assertNotNull(dataSource);
+        Assert.assertNotNull(booksDao);
     }
+
+    @Test
+    public void testMockConnection() throws Exception {
+
+        when(dataSource.getConnection()).thenReturn(connection);
+        Assert.assertNotNull(dataSource.getConnection());
+    }
+
+    @Test
+    public void testGetBooksByUser() throws Exception {
+        when(booksDao.getBooksByUser(any(String.class))).thenReturn(Arrays.asList(book));
+        List<Book> books = booksDao.getBooksByUser("admin");
+        Assert.assertEquals(1, books.size());
+        Assert.assertEquals(book.getIsbnId(), books.get(0).getIsbnId());
+        Assert.assertEquals(book.getTitle(), books.get(0).getTitle());
+        Assert.assertEquals(book.getUser(), books.get(0).getUser());
+    }
+
+    @Test
+    public void testGetAllOtherBooks() throws Exception {
+        when(booksDao.getAllOtherBooks(any(String.class))).thenReturn(Arrays.asList(book));
+        List<Book> books = booksDao.getAllOtherBooks("admin");
+        Assert.assertEquals(1, books.size());
+        Assert.assertEquals(book.getIsbnId(), books.get(0).getIsbnId());
+        Assert.assertEquals(book.getTitle(), books.get(0).getTitle());
+        Assert.assertEquals(book.getUser(), books.get(0).getUser());
+    }
+
+    @Test
+    public void testGetCommentsForABook() throws Exception {
+        Comment comment = new Comment();
+        comment.setBookId("001");
+        comment.setUser("Admin");
+        comment.setRating("5");
+        comment.setComment("Excellent");
+
+        when(booksDao.getComments(any(String.class))).thenReturn(Arrays.asList(comment));
+        List<Comment> comments = booksDao.getComments("admin");
+        Assert.assertEquals(1, comments.size());
+        Assert.assertEquals(comment.getBookId(), comments.get(0).getBookId());
+        Assert.assertEquals(comment.getComment(), comments.get(0).getComment());
+        Assert.assertEquals(comment.getUser(), comments.get(0).getUser());
+        Assert.assertEquals(comment.getRating(), comments.get(0).getRating());
+
+    }
+
+    @Test
+    public void testAddBook() throws Exception {
+
+        when(booksDao.addBooks(any(Book.class))).thenReturn(1);
+        Assert.assertEquals(1, booksDao.addBooks(new Book()));
+    }
+
+    @Test
+    public void testAddComment() throws Exception {
+        when(booksDao.addComments(any(Comment.class))).thenReturn(1);
+        Assert.assertEquals(1, booksDao.addComments(new Comment()));
+
+    }
+
 }
