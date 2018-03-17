@@ -24,13 +24,13 @@ public class BooksDaoTest {
     @Mock
     private Connection connection;
 
-    private Book book;
-
     @Mock
     private DataSource dataSource;
 
     @Mock
     private BooksDao booksDao;
+
+    private Book book;
 
     @Before
     public void setUp() throws Exception {
@@ -61,9 +61,7 @@ public class BooksDaoTest {
         when(booksDao.getBooksByUser(any(String.class))).thenReturn(Arrays.asList(book));
         List<Book> books = booksDao.getBooksByUser("admin");
         Assert.assertEquals(1, books.size());
-        Assert.assertEquals(book.getIsbnId(), books.get(0).getIsbnId());
-        Assert.assertEquals(book.getTitle(), books.get(0).getTitle());
-        Assert.assertEquals(book.getUser(), books.get(0).getUser());
+        verify(book, books.get(0));
     }
 
     @Test
@@ -71,9 +69,7 @@ public class BooksDaoTest {
         when(booksDao.getAllOtherBooks(any(String.class))).thenReturn(Arrays.asList(book));
         List<Book> books = booksDao.getAllOtherBooks("admin");
         Assert.assertEquals(1, books.size());
-        Assert.assertEquals(book.getIsbnId(), books.get(0).getIsbnId());
-        Assert.assertEquals(book.getTitle(), books.get(0).getTitle());
-        Assert.assertEquals(book.getUser(), books.get(0).getUser());
+        verify(book, books.get(0));
     }
 
     @Test
@@ -106,6 +102,12 @@ public class BooksDaoTest {
         when(booksDao.addComments(any(Comment.class))).thenReturn(1);
         Assert.assertEquals(1, booksDao.addComments(new Comment()));
 
+    }
+
+    private void verify(Book expected, Book actual) {
+        Assert.assertEquals(expected.getIsbnId(), actual.getIsbnId());
+        Assert.assertEquals(expected.getTitle(), actual.getTitle());
+        Assert.assertEquals(expected.getUser(), actual.getUser());
     }
 
 }
