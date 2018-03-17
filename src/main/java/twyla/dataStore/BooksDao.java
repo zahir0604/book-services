@@ -176,7 +176,7 @@ public class BooksDao {
             preparedStatement.setTimestamp(position, getCurrentTimeStamp());
             result = preparedStatement.executeUpdate();
         } catch (SQLIntegrityConstraintViolationException e) {
-            throw new BadRequestException("Book " + params.get(0) + " is already added");
+            throw new BadRequestException("Book " + params.get(0) + " has already been added");
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
