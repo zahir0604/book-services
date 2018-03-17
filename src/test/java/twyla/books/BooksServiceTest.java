@@ -1,11 +1,11 @@
 package twyla.books;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import twyla.CommonTest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,22 +14,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class BooksServiceTest {
+public class BooksServiceTest extends CommonTest {
 
     @Mock
     private BooksService service;
 
-    private Book book;
-
-    @Before
-    public void setUp() throws Exception {
-
-        book = new Book();
-        book.setUser("admin");
-        book.setTitle("Head First Java");
-        book.setIsbnId("001");
-
-    }
+    private Book book = getBook();
 
     @Test
     public void testMock() throws Exception {
@@ -66,9 +56,4 @@ public class BooksServiceTest {
 
     }
 
-    private void verify(Book expected, Book actual) {
-        Assert.assertEquals(expected.getIsbnId(), actual.getIsbnId());
-        Assert.assertEquals(expected.getTitle(), actual.getTitle());
-        Assert.assertEquals(expected.getUser(), actual.getUser());
-    }
 }

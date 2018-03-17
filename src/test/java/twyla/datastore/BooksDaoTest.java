@@ -9,9 +9,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import twyla.books.Book;
 import twyla.comments.Comment;
 import twyla.dataStore.BooksDao;
-import twyla.dataStore.DataSource;
 
-import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,12 +18,6 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BooksDaoTest {
-
-    @Mock
-    private Connection connection;
-
-    @Mock
-    private DataSource dataSource;
 
     @Mock
     private BooksDao booksDao;
@@ -44,16 +36,7 @@ public class BooksDaoTest {
 
     @Test
     public void testMockDao() throws Exception {
-
-        Assert.assertNotNull(dataSource);
         Assert.assertNotNull(booksDao);
-    }
-
-    @Test
-    public void testMockConnection() throws Exception {
-
-        when(dataSource.getConnection()).thenReturn(connection);
-        Assert.assertNotNull(dataSource.getConnection());
     }
 
     @Test

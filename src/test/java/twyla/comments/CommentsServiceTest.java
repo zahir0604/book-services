@@ -1,11 +1,11 @@
 package twyla.comments;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import twyla.CommonTest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,21 +14,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CommentsServiceTest {
+public class CommentsServiceTest extends CommonTest {
 
     @Mock
     private CommentsService service;
 
-    private Comment comment;
+    private Comment comment = getComment();
 
-    @Before
-    public void setUp() throws Exception {
-        comment = new Comment();
-        comment.setBookId("001");
-        comment.setUser("Admin");
-        comment.setRating("5");
-        comment.setComment("Excellent");
-    }
+    private CommentsByUser commentsByUser = getCommentByUser();
 
     @Test
     public void testMock() throws Exception {
@@ -47,16 +40,10 @@ public class CommentsServiceTest {
     @Test
     public void testGetCommentsByUser() throws Exception {
 
-        CommentsByUser commentsByUser = new CommentsByUser();
-        commentsByUser.setBookId("001");
-        commentsByUser.setTitle("Clean Code");
-        commentsByUser.setRating("5");
-        commentsByUser.setComment("Good");
-        commentsByUser.setUser("Admin");
-
         when(service.getCommentsByUser(any(String.class))).thenReturn(Arrays.asList(commentsByUser));
         List<CommentsByUser> commentsByUsers = service.getCommentsByUser("Admin");
         Assert.assertEquals(1, commentsByUsers.size());
+        verify(commentsByUser, commentsByUsers.get(0));
 
     }
 
@@ -64,15 +51,9 @@ public class CommentsServiceTest {
     public void testAddComments() throws Exception {
 
         when(service.addComment(any(Comment.class))).thenReturn(Arrays.asList(comment));
-        List<Comment> comments = service.addComment(comment);
+        List<Comment> comments = service.addComment(getComment());
         Assert.assertEquals(1, comments.size());
 
     }
 
-    private void verify(Comment expected, Comment actual) {
-        Assert.assertEquals(expected.getBookId(), actual.getBookId());
-        Assert.assertEquals(expected.getComment(), actual.getComment());
-        Assert.assertEquals(expected.getUser(), actual.getUser());
-        Assert.assertEquals(expected.getRating(), actual.getRating());
-    }
 }
