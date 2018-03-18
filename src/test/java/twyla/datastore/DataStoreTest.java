@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import twyla.config.Text;
 import twyla.dataStore.DataSource;
 
 import java.sql.Connection;

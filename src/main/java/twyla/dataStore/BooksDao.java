@@ -23,14 +23,14 @@ public class BooksDao {
 
     public List<Book> getBooksByUser(String user) {
 
-        String query = "select * from BOOK B WHERE B.USER = ? ORDER BY DATE_TIME DESC";
+        String query = "select * from book B WHERE B.user_name  = ? ORDER BY date_time DESC";
         List<String> params = Arrays.asList(user);
         return getBooks(executeSelect(query, params));
     }
 
     public List<Book> getAllOtherBooks(String user) {
 
-        String query = "select * from BOOK B WHERE B.USER <> ? ORDER BY DATE_TIME DESC";
+        String query = "select * from book B WHERE B.user_name  <> ? ORDER BY date_time DESC";
 
         List<String> params = Arrays.asList(user);
         return getBooks(executeSelect(query, params));
@@ -38,8 +38,8 @@ public class BooksDao {
 
     public int addBooks(Book book) {
 
-        String query = "INSERT INTO BOOK"
-            + "(ISBN_ID, TITLE, USER, DATE_TIME) VALUES"
+        String query = "INSERT INTO book"
+            + "(isbn_id, title, user_name , date_time) VALUES"
             + "(?,?,?,?)";
 
         List<String> params = Arrays.asList(book.getIsbnId(), book.getTitle(), book.getUser());
@@ -49,8 +49,8 @@ public class BooksDao {
 
     public int addComments(Comment comment) {
 
-        String query = "INSERT INTO COMMENTS"
-            + "(BOOK_ID, COMMENT, RATING,USER, DATE_TIME) VALUES"
+        String query = "INSERT INTO comments"
+            + "(book_id, comment, rating,user_name , date_time) VALUES"
             + "(?,?,?,?,?)";
 
         List<String> params = Arrays.asList(comment.getBookId(), comment.getComment(), comment.getRating(), comment.getUser());
@@ -60,15 +60,15 @@ public class BooksDao {
 
     public List<Comment> getComments(String bookId) {
 
-        String query = "select * from COMMENTS where BOOK_ID = ? ORDER BY DATE_TIME DESC";
+        String query = "select * from comments where book_id = ? ORDER BY date_time DESC";
         List<String> params = Arrays.asList(bookId);
         return getComments(executeSelect(query, params));
     }
 
     public List<CommentsByUser> getCommentsByUser(String user) {
 
-        String query = "select C.BOOK_ID, B.TITLE, C.COMMENT, C.RATING from COMMENTS C, BOOK B "
-            + "where C.BOOK_ID = B.ISBN_ID AND C.USER = ? ORDER BY DATE_TIME DESC";
+        String query = "select C.book_id, B.title, C.comment, C.rating from comments C, book B "
+            + "where C.book_id = B.isbn_id AND C.user_name  = ? ORDER BY C.date_time DESC";
         List<String> params = Arrays.asList(user);
 
         return getCommentsByUser(executeSelect(query, params));
@@ -81,13 +81,20 @@ public class BooksDao {
         try {
             while (resultSet.next()) {
                 book = new Book();
-                book.setIsbnId(resultSet.getString("ISBN_ID"));
-                book.setTitle(resultSet.getString("TITLE"));
-                book.setUser(resultSet.getString("USER"));
+                book.setIsbnId(resultSet.getString("isbn_id"));
+                book.setTitle(resultSet.getString("title"));
+                book.setUser(resultSet.getString("user_name"));
                 books.add(book);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+
+        } finally {
+            try {
+                dataSource.getConnection().close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return books;
@@ -100,14 +107,20 @@ public class BooksDao {
         try {
             while (resultSet.next()) {
                 comment = new Comment();
-                comment.setBookId(resultSet.getString("BOOK_ID"));
-                comment.setComment(resultSet.getString("COMMENT"));
-                comment.setRating(resultSet.getString("RATING"));
-                comment.setUser(resultSet.getString("USER"));
+                comment.setBookId(resultSet.getString("book_id"));
+                comment.setComment(resultSet.getString("comment"));
+                comment.setRating(resultSet.getString("rating"));
+                comment.setUser(resultSet.getString("user_name"));
                 comments.add(comment);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                dataSource.getConnection().close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return comments;
@@ -120,14 +133,20 @@ public class BooksDao {
         try {
             while (resultSet.next()) {
                 commentsByUser = new CommentsByUser();
-                commentsByUser.setTitle(resultSet.getString("TITLE"));
-                commentsByUser.setBookId(resultSet.getString("BOOK_ID"));
-                commentsByUser.setComment(resultSet.getString("COMMENT"));
-                commentsByUser.setRating(resultSet.getString("RATING"));
+                commentsByUser.setTitle(resultSet.getString("title"));
+                commentsByUser.setBookId(resultSet.getString("book_id"));
+                commentsByUser.setComment(resultSet.getString("comment"));
+                commentsByUser.setRating(resultSet.getString("rating"));
                 comments.add(commentsByUser);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            try {
+                dataSource.getConnection().close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         return comments;
@@ -147,13 +166,6 @@ public class BooksDao {
             resultSet = preparedStatement.executeQuery();
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                preparedStatement.close();
-                dataSource.getConnection().close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
 
         }
 
@@ -179,16 +191,8 @@ public class BooksDao {
             throw new BadRequestException("Book " + params.get(0) + " has already been added");
         } catch (SQLException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                preparedStatement.close();
-                dataSource.getConnection().close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-
         }
-            return result;
+        return result;
     }
 
     private java.sql.Timestamp getCurrentTimeStamp() {

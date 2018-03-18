@@ -1,27 +1,36 @@
 package twyla.dataStore;
 
 import org.springframework.stereotype.Repository;
+import twyla.config.Text;
 
 import java.sql.*;
 
 @Repository
 public class DataSource {
 
-    private static final String DRIVER = "org.hsqldb.jdbc.JDBCDriver";
-    private static final String URL = "jdbc:hsqldb:file:C:/Workspace/Twyla/book-services/books";
-    private static final String USER_NAME = "sa";
-    private static final String PASSWORD = "";
+    private static final String DRIVER = "org.postgresql.Driver";
+    private static final String URL = Text.get("url");
+    private static final String USER_NAME = Text.get("username");
+    private static final String PASSWORD = Text.get("password");
 
     public static final String BOOK_TABLE = "BOOK";
     public static final String COMMENTS_TABLE = "COMMENTS";
 
+    private static Connection connection = null;
+
     public Connection getConnection() {
-        Connection connection = null;
         try {
-            Class.forName(DRIVER);
-            connection = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            if (connection == null || connection.isClosed()) {
+
+                try {
+                    Class.forName(DRIVER);
+                    connection = DriverManager.getConnection(URL, USER_NAME, PASSWORD);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
 
         return connection;
@@ -32,9 +41,11 @@ public class DataSource {
         ResultSet resultSet = null;
         Statement statement = null;
         try {
-
             databaseMetaData = getConnection().getMetaData();
             resultSet = databaseMetaData.getTables(null, null, table, null);
+            if (!resultSet.next()) {
+                resultSet = databaseMetaData.getTables(null, null, table.toLowerCase(), null);
+            }
             if (!resultSet.next()) {
                 statement = getConnection().createStatement();
                 statement.executeUpdate(getQuery(table));
@@ -42,6 +53,12 @@ public class DataSource {
 
         } catch (SQLException ex) {
             ex.printStackTrace();
+        } finally {
+            try {
+                getConnection().close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }
@@ -52,24 +69,25 @@ public class DataSource {
 
         switch (table) {
             case COMMENTS_TABLE:
-                query = "CREATE TABLE COMMENTS"
+                query = "CREATE TABLE comments"
                     + "("
-                    + "    BOOK_ID varchar(16),"
-                    + "    COMMENT varchar(255),"
-                    + "    RATING varchar(2),"
-                    + "    USER varchar(16),"
-                    + "    DATE_TIME timestamp"
+                    + "    book_id varchar(16),"
+                    + "    comment varchar(255),"
+                    + "    rating varchar(2),"
+                    + "    user_name  varchar(16),"
+                    + "    date_time timestamp"
                     + ")";
+
                 break;
 
             case BOOK_TABLE:
-                query = "CREATE TABLE BOOK"
+                query = "CREATE TABLE book"
                     + "("
-                    + "    ISBN_ID varchar(16),"
-                    + "    TITLE varchar(32),"
-                    + "    USER varchar(16),"
-                    + "    DATE_TIME timestamp,"
-                    + " PRIMARY KEY ( ISBN_ID ))";
+                    + "    isbn_id varchar(16),"
+                    + "    title varchar(32),"
+                    + "    user_name  varchar(16),"
+                    + "    date_time timestamp,"
+                    + " PRIMARY KEY ( isbn_id ))";
 
                 break;
 
