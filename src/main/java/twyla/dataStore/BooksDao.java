@@ -190,6 +190,9 @@ public class BooksDao {
         } catch (SQLIntegrityConstraintViolationException e) {
             throw new BadRequestException("Book " + params.get(0) + " has already been added");
         } catch (SQLException e) {
+            if (e.getMessage().contains("duplicate key")) {
+                throw new BadRequestException("Book " + params.get(0) + " has already been added");
+            }
             throw new RuntimeException(e);
         }
         return result;
